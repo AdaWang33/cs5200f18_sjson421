@@ -1,0 +1,7 @@
+cs5200-fall2018-son.us-east-1.elasticbeanstalk.com
+
+cs5200-fall2018-son.us-east-1.elasticbeanstalk.com/api/hello/string
+
+cs5200-fall2018-son.us-east-1.elasticbeanstalk.com/api/hello/object
+
+https://github.com/Maddy1993/cs5200f18_sjson421
