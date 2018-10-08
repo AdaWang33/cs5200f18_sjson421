@@ -3,3 +3,6 @@ Hostname: <Hostname>
 Port: <Port>
 Username: <Username>
 Password: <Password>
+
+
+My database is on Heroku, so I did this assignment locally.
