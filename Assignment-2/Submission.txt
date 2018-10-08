@@ -6,3 +6,5 @@ Password: <Password>
 
 
 My database is on Heroku, so I did this assignment locally.
+mysql://b603cf25416ecd:ca84f138@us-cdbr-iron-east-01.cleardb.net/heroku_b0a4509386c4b99?reconnect=true
+This is my Heroku database but it doesn't have Assignment 2.
