@@ -23,10 +23,8 @@ public class PageDao implements PageImpl {
 
 	private static final String FIND_ALL_PAGES = "SELECT * FROM page";
 	private static final String FIND_PAGE_BY_ID = "SELECT * FROM page WHERE id = ?";
-	private static final String FIND_ALL_PAGE_FOR_WEB = "SELECT * FROM website JOIN website_role"
-			+ "ON website.id = website_role.website_id JOIN page ON website_role.page_id ="
-			+ "page.id WHERE website_role.role = 'OWNER' AND website.id = ?";
-	private static final String UPDATE_PAGE = "UPDATE page SET title=?,description=?,created=?,updated=?,"
+	private static final String FIND_ALL_PAGE_FOR_WEB = "SELECT * FROM page WHERE page.website_id = ?";
+	private static final String UPDATE_PAGE = "UPDATE page SET title=?,page.description=?,created=?,updated=?,"
 			+ "views=? WHERE id = ?";
 
 	private static final String DELETE_PAGE = "DELETE FROM page WHERE id = ?";
@@ -94,8 +92,9 @@ public class PageDao implements PageImpl {
 				Date created = results.getDate("page.created");
 				Date updated = results.getDate("page.updated");
 				int visits = results.getInt("page.views");
-
+				int website_id = results.getInt("website_id");
 				Page w = new Page(id, name, description, created, updated, visits);
+				w.setWebsiteId(website_id);
 				pages.add(w);
 			}
 		} catch (SQLException e) {
@@ -132,8 +131,9 @@ public class PageDao implements PageImpl {
 				Date created = results.getDate("page.created");
 				Date updated = results.getDate("page.updated");
 				int visits = results.getInt("page.views");
-
+				int website_id = results.getInt("website_id");
 				w = new Page(id, name, description, created, updated, visits);
+				w.setWebsiteId(website_id);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -171,6 +171,8 @@ public class PageDao implements PageImpl {
 				Date updated = results.getDate("page.updated");
 				int visits = results.getInt("page.views");
 
+				Page newPage = new Page(id, name, description, created, updated, visits);
+				newPage.setWebsiteId(websiteId);
 				pages.add(new Page(id, name, description, created, updated, visits));
 			}
 		} catch (SQLException e) {
@@ -200,10 +202,10 @@ public class PageDao implements PageImpl {
 			pStatement = connection.prepareStatement(UPDATE_PAGE);
 			pStatement.setString(1, page.getTitle());
 			pStatement.setString(2, page.getDescription());
-			pStatement.setDate(4, page.getCreated());
-			pStatement.setDate(5, page.getUpdated());
-			pStatement.setInt(6, page.getViews());
-			pStatement.setInt(7, pageId);
+			pStatement.setDate(3, page.getCreated());
+			pStatement.setDate(4, page.getUpdated());
+			pStatement.setInt(5, page.getViews());
+			pStatement.setInt(6, pageId);
 
 			pStatement.executeUpdate();
 			success = 1;

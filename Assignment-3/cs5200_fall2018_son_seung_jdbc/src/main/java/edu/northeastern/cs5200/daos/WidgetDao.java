@@ -20,13 +20,13 @@ public class WidgetDao implements WidgetImpl {
 
 	private static final String CREATE_WIDGET = "INSERT INTO widget VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	private static final String FIND_ALL_WIDGETS = "SELECT * FROM widget";
-	private static final String FIND_WIDGET_BY_ID = "SELECT * FROM widget WHERE id = ?";
+	private static final String FIND_WIDGET_BY_ID = "SELECT * FROM widget WHERE widget.id = ?";
 	private static final String FIND_WIDGETS_FOR_PAGE = "SELECT * FROM widget JOIN page"
 			+ "ON widget.page_id = page.id WHERE page.id = ?";
-	private static final String UPDATE_WIDGET = "UPDATE widget SET name=?, width=?,height=?,css_class=?"
-			+ "css_style=?,text=?,order=?,url=?,shareable=?,expandable=?,src=?,size=?,html=?,page_id=?"
-			+ "WHERE id = ?";
-	private static final String DELETE_WIDGET = "DELETE FROM widget WHERE id = ?";
+	private static final String UPDATE_WIDGET = "UPDATE widget SET name=?, width=?,height=?,css_class=?, "
+			+ "css_style=?,widget.text=?,widget.order=?,url=?,shareble=?,expandable=?,src=?,size=?,html=?,page_id=? "
+			+ "WHERE widget.id = ?";
+	private static final String DELETE_WIDGET = "DELETE FROM widget WHERE widget.id = ?";
 
 	private WidgetDao() {
 	}
@@ -126,8 +126,10 @@ public class WidgetDao implements WidgetImpl {
 				String css_style = results.getString("css_style");
 				String text = results.getString("text");
 				int order = results.getInt("order");
+				int pageId = results.getInt("page_id");
 
 				Widget w = new Widget(id, name, width, height, css_class, css_style, text, order);
+				w.setPageId(pageId);
 				widgets.add(w);
 			}
 		} catch (SQLException e) {
@@ -156,7 +158,7 @@ public class WidgetDao implements WidgetImpl {
 		try {
 			pStatement = connection.prepareStatement(FIND_WIDGET_BY_ID);
 			pStatement.setInt(1, widgetId);
-			pStatement.executeQuery();
+			results = pStatement.executeQuery();
 			
 			if (results.next()) {
 				int id = results.getInt("id");
@@ -167,8 +169,10 @@ public class WidgetDao implements WidgetImpl {
 				String css_style = results.getString("css_style");
 				String text = results.getString("text");
 				int order = results.getInt("order");
+				int pageId = results.getInt("page_id");
 
 				w = new Widget(id, name, width, height, css_class, css_style, text, order);
+				w.setPageId(pageId);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -196,7 +200,7 @@ public class WidgetDao implements WidgetImpl {
 		try {
 			pStatement = connection.prepareStatement(FIND_WIDGETS_FOR_PAGE);
 			pStatement.setInt(1, pageId);
-			pStatement.executeQuery();
+			results = pStatement.executeQuery();
 			
 			while (results.next()) {
 				int id = results.getInt("id");
@@ -246,8 +250,8 @@ public class WidgetDao implements WidgetImpl {
 			int order = widget.getOrder();
 			
 			String url = null;
-			Boolean shareble = null;
-			Boolean expandable = null;
+			Boolean shareble = false;
+			Boolean expandable = false;
 			String src = null;
 			int size = 0;
 			String html = null;
@@ -266,23 +270,24 @@ public class WidgetDao implements WidgetImpl {
 			else if (widget instanceof HtmlWidget) {
 				html = ((HtmlWidget) widget).getHtml();
 			}
+			int pageId = widget.getPageId();
 			
 			pStatement = connection.prepareStatement(UPDATE_WIDGET);
-			pStatement.setInt(1, id);
-			pStatement.setString(2, name);
-			pStatement.setInt(3, width);
-			pStatement.setInt(4, height);
-			pStatement.setString(5, css_class);
-			pStatement.setString(6, css_style);
-			pStatement.setString(7, text);
-			pStatement.setInt(8, order);
-			pStatement.setString(9, url);
-			pStatement.setBoolean(10, shareble);
-			pStatement.setBoolean(11, expandable);
-			pStatement.setString(12, src);
-			pStatement.setInt(13, size);
-			pStatement.setString(14, html);
-			pStatement.setInt(15, widget.getPage().getId());
+			pStatement.setString(1, name);
+			pStatement.setInt(2, width);
+			pStatement.setInt(3, height);
+			pStatement.setString(4, css_class);
+			pStatement.setString(5, css_style);
+			pStatement.setString(6, text);
+			pStatement.setInt(7, order);
+			pStatement.setString(8, url);
+			pStatement.setBoolean(9, shareble);
+			pStatement.setBoolean(10, expandable);
+			pStatement.setString(11, src);
+			pStatement.setInt(12, size);
+			pStatement.setString(13, html);
+			pStatement.setInt(14, pageId);
+			pStatement.setInt(15, widgetId);
 
 			pStatement.executeUpdate();
 			success = 1;

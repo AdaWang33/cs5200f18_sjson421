@@ -11,7 +11,7 @@ public class Page {
 	private Date created;
 	private Date updated;
 	private int views;
-	private Website website;
+	private int websiteId;
 	private List<PageRole> pageRoles;
 	private List<PagePrivilege> pagePrivileges;
 	private List<Widget> widgets;
@@ -24,7 +24,7 @@ public class Page {
 		this.created = created;
 		this.updated = updated;
 		this.views = views;
-		this.website = null;
+		this.websiteId = 0;
 		this.pageRoles = new ArrayList<PageRole>();
 		this.pagePrivileges = new ArrayList<PagePrivilege>();
 		this.widgets = new ArrayList<Widget>();
@@ -65,11 +65,11 @@ public class Page {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public Website getWebsite() {
-		return website;
+	public int getWebsiteId() {
+		return websiteId;
 	}
-	public void setWebsite(Website website) {
-		this.website = website;
+	public void setWebsiteId(int websiteId) {
+		this.websiteId = websiteId;
 	}
 	public List<Widget> getWidgets() {
 		return widgets;

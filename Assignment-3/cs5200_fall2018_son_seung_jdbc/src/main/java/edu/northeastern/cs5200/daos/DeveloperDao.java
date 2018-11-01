@@ -22,35 +22,41 @@ public class DeveloperDao implements DeveloperImpl {
 	private PreparedStatement pStatement1 = null;
 	private PreparedStatement pStatement2 = null;
 	private PreparedStatement pStatement3 = null;
+	private PreparedStatement pStatementAddress = null;
+	private PreparedStatement pStatementPhone = null;
 	private ResultSet results = null;
 
 	private static final String CREATE_DEVELOPER = "INSERT INTO developer VALUES (?,?)";
 	private static final String CREATE_PERSON = "INSERT INTO person VALUES (?,?,?,?,?,?,?)";
 	private static final String CREATE_ADDRESS = "INSERT INTO address VALUES (NULL, ?,?,?,?,?,?,?)";
 	private static final String CREATE_PHONE = "INSERT INTO phone (phone, primary) VALUES (NULL, ?,?,?)";
-	
+
 	private static final String FIND_ALL_DEVELOPERS = "SELECT * FROM developer JOIN person ON "
 			+ "developer.id = person.id JOIN address ON person.id = address.person_id "
 			+ "JOIN phone ON person.id = phone.person_id";
 	private static final String FIND_DEVELOPER_BY_ID = "SELECT * FROM developer JOIN person ON "
-			+ "developer.id = person.id JOIN address ON person.id = address.person_id JOIN "
-			+ "phone ON person.id = phone.person_id WHERE person.id = ?";
+			+ "developer.id = person.id WHERE person.id = ?";
 	private static final String FIND_DEVELOPER_BY_USERNAME = "SELECT * FROM developer JOIN person ON "
-			+ "developer.personId = person.personId JOIN address ON person.id = address.person_id JOIN "
-			+ "phone ON person.id = phone.person_id  WHERE person.username = ?";
+			+ "developer.id = person.id WHERE person.username = ?";
 	private static final String FIND_DEVELOPER_BY_CREDENTIALS = "SELECT * FROM developer JOIN person ON "
-			+ "developer.personId = person.personId JOIN address ON person.id = address.person_id JOIN "
-			+ "phone ON person.id = phone.person_id WHERE person.username = ? AND person.password=?";
+			+ "developer.id = person.id WHERE person.username = ? AND person.password=?";
 
 	private static final String UPDATE_DEVELOPER = "UPDATE developer SET developer_key = ? WHERE id = ?";
 	private static final String UPDATE_PERSON = "UPDATE person SET " + "first_name = ?, last_name = ?, username = ?,"
 			+ "password = ?, email = ?, dob = ? WHERE id = ?";
+	
+	private static final String GET_ADDRESS = "SELECT * FROM address WHERE person_id = ? AND address.primary = 1";
 	private static final String UPDATE_ADDRESS = "UPDATE address SET street1 = ?, street2 = ?, city = ?,"
-			+ "state = ?, zip = ? WHERE person_id = ? AND primary = 1";
-	private static final String UPDATE_PHONE = "UPDATE phone SET phone = ? WHERE person_id = ? AND primary = 1";
+			+ "state = ?, zip = ? WHERE person_id = ? AND address.primary = 1";
+	private static final String INSERT_ADDRESS = "INSERT INTO address VALUES (NULL,?,?,?,?,?,1,?)";	
+
+	private static final String GET_PHONE = "SELECT * FROM phone WHERE person_id = ? AND phone.primary = 1";
+	private static final String UPDATE_PHONE = "UPDATE phone SET phone = ? WHERE person_id = ? AND phone.primary = 1";
+	private static final String INSERT_PHONE = "INSERT INTO phone VALUES (NULL,?,1,?)";
 
 	private static final String DELETE_DEVELOPER = "DELETE FROM developer WHERE id = ?";
 
+	private static final String DELETE_ADDRESS = "DELETE FROM address WHERE person_id = ?";
 	private DeveloperDao() {
 	}
 
@@ -60,26 +66,26 @@ public class DeveloperDao implements DeveloperImpl {
 	}
 
 	public void truncateAll() {
-	    try {
-	    	connection = Connection.getInstance().getConnection();
-	    	statement = connection.createStatement();
-	    	statement.executeUpdate("SET FOREIGN_KEY_CHECKS = 0; ");
-	    	statement.executeUpdate("TRUNCATE address;");
-	    	statement.executeUpdate("TRUNCATE developer; ");
-	    	statement.executeUpdate("TRUNCATE page;");
-	    	statement.executeUpdate("TRUNCATE page_priviledge;");
-	    	statement.executeUpdate("TRUNCATE page_role;");
-	    	statement.executeUpdate("TRUNCATE person;");
-	    	statement.executeUpdate("TRUNCATE phone;");
-	    	statement.executeUpdate("TRUNCATE user;");
-	    	statement.executeUpdate("TRUNCATE website;");
-	    	statement.executeUpdate("TRUNCATE website_priviledge;");
-	    	statement.executeUpdate("TRUNCATE website_role;");
-	    	statement.executeUpdate("TRUNCATE widget;");
-	    	statement.executeUpdate("SET FOREIGN_KEY_CHECKS = 1;");
-	    } catch (SQLException e) {
-	    	e.printStackTrace();
-	    } finally {
+		try {
+			connection = Connection.getInstance().getConnection();
+			statement = connection.createStatement();
+			statement.executeUpdate("SET FOREIGN_KEY_CHECKS = 0; ");
+			statement.executeUpdate("TRUNCATE address;");
+			statement.executeUpdate("TRUNCATE developer; ");
+			statement.executeUpdate("TRUNCATE page;");
+			statement.executeUpdate("TRUNCATE page_priviledge;");
+			statement.executeUpdate("TRUNCATE page_role;");
+			statement.executeUpdate("TRUNCATE person;");
+			statement.executeUpdate("TRUNCATE phone;");
+			statement.executeUpdate("TRUNCATE user;");
+			statement.executeUpdate("TRUNCATE website;");
+			statement.executeUpdate("TRUNCATE website_priviledge;");
+			statement.executeUpdate("TRUNCATE website_role;");
+			statement.executeUpdate("TRUNCATE widget;");
+			statement.executeUpdate("SET FOREIGN_KEY_CHECKS = 1;");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
 			try {
 				if (statement != null)
 					statement.close();
@@ -96,8 +102,9 @@ public class DeveloperDao implements DeveloperImpl {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-	    }
-	} 
+		}
+	}
+
 	@Override
 	public void createDeveloper(Developer developer) {
 		connection = Connection.getInstance().getConnection();
@@ -147,7 +154,7 @@ public class DeveloperDao implements DeveloperImpl {
 					pStatement3.setString(1, phone.getPhone());
 					pStatement3.setBoolean(2, phone.getPrimary());
 					pStatement3.setInt(3, id);
-
+					
 					pStatement3.executeUpdate();
 				}
 			}
@@ -175,7 +182,7 @@ public class DeveloperDao implements DeveloperImpl {
 			}
 		}
 	}
-	
+
 	@Override
 	public Collection<Developer> findAllDevelopers() {
 		connection = Connection.getInstance().getConnection();
@@ -373,16 +380,20 @@ public class DeveloperDao implements DeveloperImpl {
 			Address primaryAddress = null;
 			Phone primaryPhone = null;
 
-			for (Address address : addresses) {
-				if (address.getPrimary() == true) {
-					primaryAddress = address;
-					break;
+			if (addresses != null) {
+				for (Address address : addresses) {
+					if (address.getPrimary()) {
+						primaryAddress = address;
+						break;
+					}
 				}
 			}
-			for (Phone phone : phones) {
-				if (phone.getPrimary() == true) {
-					primaryPhone = phone;
-					break;
+			if (phones != null) {
+				for (Phone phone : phones) {
+					if (phone.getPrimary()) {
+						primaryPhone = phone;
+						break;
+					}
 				}
 			}
 
@@ -399,23 +410,50 @@ public class DeveloperDao implements DeveloperImpl {
 			pStatement1.setDate(6, dob);
 			pStatement1.setInt(7, id);
 
-			pStatement2 = connection.prepareStatement(UPDATE_ADDRESS);
-			pStatement2.setString(1, primaryAddress.getStreet1());
-			pStatement2.setString(2, primaryAddress.getStreet2());
-			pStatement2.setString(3, primaryAddress.getCity());
-			pStatement2.setString(4, primaryAddress.getState());
-			pStatement2.setString(5, primaryAddress.getZip());
-			pStatement2.setInt(6, primaryAddress.getPerson().getId());
-
-			pStatement3 = connection.prepareStatement(UPDATE_PHONE);
-			pStatement3.setString(1, primaryPhone.getPhone());
-			pStatement3.setInt(2, primaryPhone.getPerson().getId());
-
-			pStatement.executeUpdate();
 			pStatement1.executeUpdate();
-			pStatement2.executeUpdate();
-			pStatement3.executeUpdate();
+			pStatement.executeUpdate();
+			
+			if (primaryAddress != null) {
+				pStatement2 = connection.prepareStatement(GET_ADDRESS);
+				pStatement2.setInt(1, developerId);
+				results = pStatement2.executeQuery();
+				
+				if (results.next()) {
+					pStatementAddress = connection.prepareStatement(UPDATE_ADDRESS);
+					pStatementAddress.setString(1, primaryAddress.getStreet1());
+					pStatementAddress.setString(2, primaryAddress.getStreet2());
+					pStatementAddress.setString(3, primaryAddress.getCity());
+					pStatementAddress.setString(4, primaryAddress.getState());
+					pStatementAddress.setString(5, primaryAddress.getZip());
+					pStatementAddress.setInt(6, primaryAddress.getPerson().getId());
+				} else {
+					pStatementAddress = connection.prepareStatement(INSERT_ADDRESS);
+					pStatementAddress.setString(1, primaryAddress.getStreet1());
+					pStatementAddress.setString(2, primaryAddress.getStreet2());
+					pStatementAddress.setString(3, primaryAddress.getCity());
+					pStatementAddress.setString(4, primaryAddress.getState());
+					pStatementAddress.setString(5, primaryAddress.getZip());
+					pStatementAddress.setInt(6, primaryAddress.getPerson().getId());
+				}
+				pStatementAddress.executeUpdate();
+			}
 
+			if (primaryPhone != null) {
+				pStatement2 = connection.prepareStatement(GET_PHONE);
+				pStatement2.setInt(1, developerId);
+				results = pStatement2.executeQuery();
+				
+				if (results.next()) {
+					pStatementPhone = connection.prepareStatement(UPDATE_PHONE);
+					pStatementPhone.setString(1, primaryPhone.getPhone());
+					pStatementPhone.setInt(2, developerId);
+				} else {
+					pStatementPhone = connection.prepareStatement(INSERT_PHONE);
+					pStatementPhone.setString(1, primaryPhone.getPhone());
+					pStatementPhone.setInt(2, developerId);
+				}
+				pStatementPhone.executeUpdate();
+			}
 			success = 1;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -435,6 +473,10 @@ public class DeveloperDao implements DeveloperImpl {
 					pStatement2.close();
 				if (pStatement3 != null)
 					pStatement3.close();
+				if (pStatementAddress != null)
+					pStatementAddress.close();
+				if (pStatementPhone != null)
+					pStatementPhone.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -476,5 +518,36 @@ public class DeveloperDao implements DeveloperImpl {
 			}
 		}
 		return success;
+	}
+	
+	public void deleteAddressByDeveloperId (int developerId) {
+		connection = Connection.getInstance().getConnection();
+		try {
+			pStatement = connection.prepareStatement(DELETE_ADDRESS);
+			pStatement.setInt(1, developerId);
+
+			pStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (connection != null)
+					connection.close();
+				if (statement != null)
+					statement.close();
+				if (pStatement != null)
+					pStatement.close();
+				if (results != null)
+					results.close();
+				if (pStatement1 != null)
+					pStatement1.close();
+				if (pStatement2 != null)
+					pStatement2.close();
+				if (pStatement3 != null)
+					pStatement3.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

@@ -9,7 +9,7 @@ public class Widget {
 	private String cssStyle;
 	private String text;
 	private int order;
-	private Page page;
+	private int pageId;
 	
 	public Widget(int id, String name, int width, int height, String cssStyle, String cssClass, String text,
 			int order) {
@@ -22,7 +22,7 @@ public class Widget {
 		this.cssStyle = cssStyle;
 		this.text = text;
 		this.order = order;
-		this.page = null;
+		this.pageId = 0;
 	}
 	public String getName() {
 		return name;
@@ -72,10 +72,10 @@ public class Widget {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public Page getPage() {
-		return page;
+	public int getPageId() {
+		return pageId;
 	}
-	public void setPage(Page page) {
-		this.page = page;
+	public void setPageId(int pageId) {
+		this.pageId = pageId;
 	}
 }
